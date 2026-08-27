@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WMS / WCS / MI10 Enterprise Suite</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .active-page {
+      display: block;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    .sidebar {
+      background: #111827;
+      min-height: 100vh;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px;
+      border-radius: 12px;
+      transition: 0.3s;
+      margin-bottom: 10px;
+      background: transparent;
+    }
+
+    .nav-btn:hover {
+      background: #1e293b;
+    }
+
+    .status-green {
+      color: #22c55e;
+    }
+
+    .status-red {
+      color: #ef4444;
+    }
+
+    table {
+      width: 100%;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .alert-box {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid #ef4444;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginPage" class="min-h-screen flex items-center justify-center p-6">
+  <div class="card w-full max-w-md">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold">MI10 Enterprise</h1>
+      <p class="text-gray-400 mt-2">WMS / WCS / ASRS Control System</p>
+    </div>
+
+    <div class="space-y-5">
+      <div>
+        <label class="block mb-2">Username</label>
+        <input id="username" type="text" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-600 outline-none" placeholder="Enter Username">
+      </div>
+
+      <div>
+        <label class="block mb-2">Password</label>
+        <input id="password" type="password" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-600 outline-none" placeholder="Enter Password">
+      </div>
+
+      <div>
+        <label class="block mb-2">Mode</label>
+        <select id="userRole" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-600 outline-none">
+          <option>Operator</option>
+          <option>Admin</option>
+          <option>Maintenance</option>
+        </select>
+      </div>
+
+      <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-xl text-lg font-bold">
+        Login to Dashboard
+      </button>
+
+      <!-- <div class="bg-slate-800 p-4 rounded-xl text-sm text-gray-300">
+        <p>Demo Credentials:</p>
+        <p>Username: <span class="text-green-400">admin</span></p>
+        <p>Password: <span class="text-green-400">mi10</span></p>
+      </div> -->
+
+      <p id="loginError" class="text-red-400 hidden">Invalid credentials</p>
+    </div>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+
+<div class="flex flex-col md:flex-row">
+
+  <aside class="sidebar w-full md:w-72 p-6">
+    <h1 class="text-3xl font-bold mb-2">MI10 Suite</h1>
+    <p id="roleDisplay" class="text-sm text-gray-400 mb-8">Role: -</p>
+
+    <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" data-page="orders" onclick="showPage('orders')">Orders</button>
+    <button class="nav-btn" data-page="alerts" onclick="showPage('alerts')">Alerts</button>
+    <button class="nav-btn" data-page="pallet" onclick="showPage('pallet')">Pallet ASRS</button>
+    <button class="nav-btn" data-page="bin" onclick="showPage('bin')">Bin ASRS</button>
+    <button class="nav-btn" data-page="conveyor" onclick="showPage('conveyor')">Conveyors</button>
+    <button class="nav-btn" data-page="lifter" onclick="showPage('lifter')">Lifters</button>
+    <button class="nav-btn" data-page="rgv" onclick="showPage('rgv')">RGV</button>
+    <button class="nav-btn" data-page="communication" onclick="showPage('communication')">MI10 Communication</button>
+    <button class="nav-btn" data-page="analytics" onclick="showPage('analytics')">Analytics</button>
+    <button class="nav-btn" data-page="crane" onclick="showPage('crane')">Crane Monitoring</button>
+    <button class="nav-btn" onclick="logout()">Logout</button>
+  </aside>
+
+  <main class="flex-1 p-6">
+
+    <div id="dashboard" class="page active-page">
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div>
+          <h2 class="text-4xl font-bold">Warehouse Dashboard</h2>
+          <p class="text-gray-400 mt-2">Real-Time WMS / WCS / MI10 Monitoring</p>
+        </div>
+
+        <div class="flex gap-3 flex-wrap">
+          <button class="bg-green-600 px-4 py-2 rounded-xl">AUTO MODE</button>
+          <button class="bg-yellow-600 px-4 py-2 rounded-xl">SEMI AUTO</button>
+          <button class="bg-red-600 px-4 py-2 rounded-xl">MANUAL MODE</button>
+        </div>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Warehouse Dashboard</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+
+        <div class="card">
+          <h3 class="text-xl font-bold mb-2">Pallet ASRS</h3>
+          <p>Status: <span class="status-green">ONLINE</span></p>
+          <p>Storage: 78%</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-xl font-bold mb-2">Bin ASRS</h3>
+          <p>Status: <span class="status-green">ONLINE</span></p>
+          <p>Bins: 4520</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-xl font-bold mb-2">Conveyors</h3>
+          <p>Status: <span class="status-green">RUNNING</span></p>
+          <p>Lines: 12</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-xl font-bold mb-2">Lifters</h3>
+          <p>Status: <span class="status-green">ACTIVE</span></p>
+          <p>Floors: GF → MF</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-xl font-bold mb-2">RGV</h3>
+          <p>Status: <span class="status-green">MOVING</span></p>
+          <p>Speed: 240 m/min</p>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div id="orders" class="page">
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <h2 class="text-4xl font-bold">Orders Management</h2>
+
+        <div class="flex gap-3 flex-wrap">
+          <button onclick="generateInbound()" class="bg-green-600 px-5 py-3 rounded-xl">Inbound Order</button>
+          <button onclick="generateOutbound()" class="bg-blue-600 px-5 py-3 rounded-xl">Outbound Order</button>
+        </div>
+      </div>
+
+      <div class="card overflow-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Type</th>
+              <th>Area</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <div id="alerts" class="page">
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <h2 class="text-4xl font-bold">System Alerts</h2>
+
+        <button onclick="triggerAlert()" class="bg-red-600 px-5 py-3 rounded-xl">
+          Generate Alert
+        </button>
+      </div>
+
+      <div id="alertsBox"></div>
+    </div>
+
+
+    <div id="pallet" class="page">
+      <div class="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+        <video autoplay muted loop class="w-full h-[300px] object-cover">
+          <source src="Crane.gif" type="video/mp4">
+        </video>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Pallet ASRS</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Crane Information</h3>
+          <p>Travel Motors: 2</p>
+          <p>Hoist Motor: 1</p>
+          <p>ODT Communication: ACTIVE</p>
+          <p>Safety Brake: NORMAL</p>
+          <p>Encoders: HEALTHY</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Storage Status</h3>
+          <p>Total Pallets: 12,450</p>
+          <p>Inbound Queue: 34</p>
+          <p>Outbound Queue: 18</p>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="bin" class="page">
+      <div class="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+        <video autoplay muted loop class="w-full h-[300px] object-cover">
+          <source src="Crane.gif" type="video/mp4">
+        </video>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Bin ASRS</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Bin Crane</h3>
+          <p>Fork Mechanism: ENABLED</p>
+          <p>Travel Motors: 2</p>
+          <p>Hoist Motor: 1</p>
+          <p>Storage/Retrieval: ACTIVE</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Bin FM ASRS</h3>
+          <p>Roller Transfer: ACTIVE</p>
+          <p>UniSHUTTLE: ONLINE</p>
+          <p>Order Consolidation: RUNNING</p>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="conveyor" class="page">
+      <div class="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+        <video autoplay muted loop class="w-full h-[300px] object-cover">
+          <source src="Crane.gif" type="video/mp4">
+        </video>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Conveyor Monitoring</h2>
+
+      <div class="card">
+        <p>Conveyor System 1: RUNNING</p>
+        <p>Conveyor System 2: RUNNING</p>
+        <p>Jam Detection: NORMAL</p>
+        <p>Barcode Sensors: ACTIVE</p>
+        <p>Transfer Speed: 92%</p>
+      </div>
+    </div>
+
+
+    <div id="lifter" class="page">
+      <h2 class="text-4xl font-bold mb-6">Lifter System</h2>
+
+      <div class="card">
+        <p>Lifter Position: GF</p>
+        <p>Load Status: AVAILABLE</p>
+        <p>Safety Interlock: NORMAL</p>
+        <p>Motor Health: GOOD</p>
+      </div>
+    </div>
+
+
+    <div id="rgv" class="page">
+      <div class="mb-6 rounded-2xl overflow-hidden shadow-2xl relative">
+        <video autoplay muted loop class="w-full h-[300px] object-cover brightness-75">
+          <source src="RGV.gif" type="video/mp4">
+        </video>
+
+        <div class="absolute inset-0 flex items-center justify-center">
+          <h2 class="text-5xl font-bold text-white drop-shadow-2xl">Loop RGV Monitoring</h2>
+        </div>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">RGV Monitoring</h2>
+
+      <div class="card">
+        <p>RGV Status: MOVING</p>
+        <p>Travel Speed: 240 m/min</p>
+        <p>Transfer Speed: 12 m/min</p>
+        <p>RCOAX Communication: ACTIVE</p>
+        <p>Loop Route: LOOP-1</p>
+      </div>
+    </div>
+
+
+    <div id="crane" class="page">
+      <div class="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+        <video autoplay muted loop class="w-full h-[300px] object-cover">
+          <source src="Crane.gif" type="video/mp4">
+        </video>
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Crane Monitoring</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Pallet Crane Status</h3>
+          <p>Travel Motor: HEALTHY</p>
+          <p>Hoist Motor: HEALTHY</p>
+          <p>Encoder Feedback: ACTIVE</p>
+          <p>ODT Communication: ONLINE</p>
+          <p>Safety Brake: NORMAL</p>
+          <p>Current Mode: AUTO</p>
+          <p>Position Accuracy: OK</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Bin Crane Status</h3>
+          <p>Fork Mechanism: ACTIVE</p>
+          <p>Horizontal Motors: RUNNING</p>
+          <p>Vertical Motor: RUNNING</p>
+          <p>Sensor Feedback: HEALTHY</p>
+          <p>Reflector Alignment: OK</p>
+          <p>Current Mode: SEMI AUTO</p>
+          <p>Alarm Status: NORMAL</p>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div id="communication" class="page">
+      <h2 class="text-4xl font-bold mb-6">MI10 Communication</h2>
+
+      <div class="card">
+        <p>TCP/IP Status: CONNECTED</p>
+        <p>B1 Communication: HEALTHY</p>
+        <p>B2 Communication: HEALTHY</p>
+        <p>B3 Communication: HEALTHY</p>
+        <p>B4 Communication: HEALTHY</p>
+        <p>Host Communication: ACTIVE</p>
+      </div>
+    </div>
+
+
+    <div id="analytics" class="page">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">System Modes</h3>
+          <p>Pallet ASRS: AUTO</p>
+          <p>Bin ASRS: AUTO</p>
+          <p>RGV: AUTO</p>
+          <p>Conveyors: RUNNING</p>
+          <p>Lifters: SEMI AUTO</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Warehouse Health</h3>
+          <p>System Utilization: 84%</p>
+          <p>Active Alarms: 2</p>
+          <p>Crane Availability: 98%</p>
+          <p>RGV Efficiency: 95%</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold mb-4">Host Communication</h3>
+          <p>MI10 ↔ WMS: CONNECTED</p>
+          <p>TCP/IP Sessions: 18</p>
+          <p>Communication Delay: NORMAL</p>
+          <p>Report Queue: EMPTY</p>
+        </div>
+
+      </div>
+      <h2 class="text-4xl font-bold mb-6">Warehouse Analytics</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <div class="card">
+          <h3 class="text-2xl font-bold">Orders</h3>
+          <p id="orderCount">0</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold">Inbound</h3>
+          <p id="inboundCount">0</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold">Outbound</h3>
+          <p id="outboundCount">0</p>
+        </div>
+
+        <div class="card">
+          <h3 class="text-2xl font-bold">Alerts</h3>
+          <p id="alertCount">0</p>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+
+<script>
+
+let currentRole = '';
+
+const rolePermissions = {
+  Admin: [
+    'dashboard', 'orders', 'alerts', 'pallet', 'bin', 'conveyor',
+    'lifter', 'rgv', 'communication', 'analytics', 'crane'
+  ],
+  Maintenance: [
+    'dashboard', 'alerts', 'pallet', 'bin', 'conveyor',
+    'lifter', 'rgv', 'communication', 'analytics', 'crane'
+  ],
+  Operator: [
+    'dashboard', 'crane'
+  ]
+};
+
+function applyRolePermissions() {
+  const allowedPages = rolePermissions[currentRole] || [];
+
+  document.querySelectorAll('.nav-btn[data-page]').forEach(button => {
+    const pageId = button.dataset.page;
+    button.style.display = allowedPages.includes(pageId) ? 'block' : 'none';
+  });
+
+  document.getElementById('roleDisplay').innerText = 'Role: ' + currentRole;
+}
+
+function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const selectedRole = document.getElementById('userRole').value;
+
+  // Existing credentials are retained. The selected role controls tab access.
+  if (username === 'Harshit' && password === '8055') {
+    currentRole = selectedRole;
+
+    document.getElementById('loginError').classList.add('hidden');
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+
+    applyRolePermissions();
+
+    // Every role starts on Dashboard.
+    showPage('dashboard');
+  } else {
+    document.getElementById('loginError').classList.remove('hidden');
+  }
+}
+
+function logout() {
+  currentRole = '';
+
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('roleDisplay').innerText = 'Role: -';
+}
+
+function showPage(pageId) {
+  const allowedPages = rolePermissions[currentRole] || [];
+
+  // Prevent unauthorized access even if showPage() is called manually.
+  if (!allowedPages.includes(pageId)) {
+    alert('Access denied. Your role (' + currentRole + ') does not have permission to open this tab.');
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active-page');
+  });
+
+  const selectedPage = document.getElementById(pageId);
+  if (selectedPage) {
+    selectedPage.classList.add('active-page');
+  }
+}
+
+let orderCounter = 1000;
+let inbound = 0;
+let outbound = 0;
+let alerts = 0;
+
+function addOrder(type) {
+
+  orderCounter++;
+
+  const areas = [
+    'Pallet ASRS',
+    'Bin ASRS',
+    'RGV',
+    'Conveyor',
+    'Lifter'
+  ];
+
+  const statuses = [
+    'Queued',
+    'Processing',
+    'Completed'
+  ];
+
+  const randomArea = areas[Math.floor(Math.random() * areas.length)];
+  const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+  const row = document.createElement('tr');
+
+  row.innerHTML = `
+    <td>ORD-${orderCounter}</td>
+    <td>${type}</td>
+    <td>${randomArea}</td>
+    <td>${randomStatus}</td>
+  `;
+
+  document.getElementById('ordersTable').prepend(row);
+
+  if(type === 'Inbound') {
+    inbound++;
+  }
+
+  if(type === 'Outbound') {
+    outbound++;
+  }
+
+  document.getElementById('orderCount').innerText = inbound + outbound;
+  document.getElementById('inboundCount').innerText = inbound;
+  document.getElementById('outboundCount').innerText = outbound;
+}
+
+function generateInbound() {
+  addOrder('Inbound');
+}
+
+function generateOutbound() {
+  addOrder('Outbound');
+}
+
+function triggerAlert() {
+
+  alerts++;
+
+  const alertMessages = [
+    'RGV Communication Delay',
+    'Conveyor Jam Detected',
+    'ODT Communication Error',
+    'Crane Encoder Fault',
+    'Bin Retrieval Delay',
+    'Lifter Interlock Active'
+  ];
+
+  const randomAlert = alertMessages[Math.floor(Math.random() * alertMessages.length)];
+
+  const div = document.createElement('div');
+  div.className = 'alert-box';
+
+  div.innerHTML = `
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="text-red-400 font-bold">${randomAlert}</p>
+        <p>${new Date().toLocaleTimeString()}</p>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="bg-red-600 px-4 py-2 rounded-lg">
+        Clear
+      </button>
+    </div>
+  `;
+
+  document.getElementById('alertsBox').prepend(div);
+
+  document.getElementById('alertCount').innerText = alerts;
+}
+
+
+generateInbound();
+generateOutbound();
+triggerAlert();
+
+</script>
+
+</div>
+
+</body>
+</html>
